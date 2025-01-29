@@ -1,9 +1,39 @@
-version: "3.8"
-
 services:
   app:
     build: .
     ports:
     - "8000:80"
     environment:
-      - LOG_LEVEL="warning"
+    - LOG_LEVEL=warning
+    - DATABASE_URL=postgresql://docker:docker@db:5432/example
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17.2-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_DB=example
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docker -d example"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 8081:8080
+
+volumes:
+  postgres_data:

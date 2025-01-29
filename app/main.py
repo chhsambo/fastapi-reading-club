@@ -3,22 +3,36 @@ from typing import Annotated
 from enum import Enum
 
 from fastapi import FastAPI, Query
+from contextlib import asynccontextmanager
 from scalar_fastapi import get_scalar_api_reference
+
 
 from app.schemas.book import Book, BookType, BookCover
 from app.schemas.filter import FilterParams
-from app.seed_data import generate_books
+from app.db import database, UserTable, BookTable
 
-app = FastAPI(title="Reading Club")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    if not database.is_connected:
+        await database.connect()
+    await UserTable.objects.get_or_create(email="test@test.com")
+
+    yield  # Hand over control to FastAPI
+
+    # Shutdown logic
+    if database.is_connected:
+        await database.disconnect()
+
+
+app = FastAPI(title="Reading Club", lifespan=lifespan)
 
 
 class ModelName(str, Enum):
     alexnet = "alexnet"
     resnet = "resnet"
     lenet = "lenet"
-
-
-fake_books_db: List[Book] = [generate_books() for _ in range(20)]
 
 
 @app.get("/")
@@ -40,7 +54,7 @@ def list_books(
     limit: int = 10,
     q: Annotated[str | None, Query(min_length=3, max_length=20)] = None,
 ):
-    books = fake_books_db
+    # books = fake_books_db
 
     if q:
         books = [book for book in books if q in book.title]

@@ -21,7 +21,7 @@ class Book(BaseModel):
     price_usd: float | None = Field(description="The price of the book in USD", default=None, ge=0.25, lt=250)
     is_offer: bool | None = None
     tags: set[str] = Field(description="The tags of the book", default=set(), max_items=10)
-    cover_image: BookCover | None = None
+    cover_image: HttpUrl
     
     model_config = {
         "json_schema_extra": {

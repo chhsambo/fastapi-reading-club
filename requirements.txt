@@ -1,3 +1,8 @@
 fastapi[standard]
+pydantic-settings
+psycopg2-binary==2.9.10
+asyncpg==0.30.0
+ormar==0.20.2
+
 scalar-fastapi
 faker
